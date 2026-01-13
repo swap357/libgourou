@@ -1,0 +1,81 @@
+#!/bin/bash
+# acsm2epub - Convert ACSM to DRM-free EPUB in one command
+# Usage: acsm2epub <file.acsm>
+
+set -e
+
+LIBGOUROU_DIR="$HOME/.acsm-tools/utils"
+ADEPT_DIR="$HOME/.config/adept"
+
+# Check for binaries
+if [[ ! -x "$LIBGOUROU_DIR/acsmdownloader" ]]; then
+    echo "Error: libgourou not found at $LIBGOUROU_DIR"
+    exit 1
+fi
+
+# Show help
+if [[ "$1" == "-h" || "$1" == "--help" || -z "$1" ]]; then
+    echo "Usage: acsm2epub <file.acsm> [output_dir]"
+    echo ""
+    echo "Converts Adobe ACSM files to DRM-free EPUB/PDF."
+    echo "First run will prompt for Adobe ID registration."
+    exit 0
+fi
+
+ACSM_FILE="$1"
+OUTPUT_DIR="${2:-.}"
+
+if [[ ! -f "$ACSM_FILE" ]]; then
+    echo "Error: File not found: $ACSM_FILE"
+    exit 1
+fi
+
+# Check if we have Adobe credentials
+if [[ ! -d "$ADEPT_DIR" || ! -f "$ADEPT_DIR/device.xml" ]]; then
+    echo "=== Adobe Account Setup (one-time) ==="
+    echo ""
+    read -p "Use anonymous auth? [Y/n]: " anon
+
+    if [[ "$anon" =~ ^[Nn] ]]; then
+        read -p "Adobe ID (email): " email
+        "$LIBGOUROU_DIR/adept_activate" -u "$email" -O "$ADEPT_DIR"
+    else
+        echo "Using anonymous registration..."
+        "$LIBGOUROU_DIR/adept_activate" -a -O "$ADEPT_DIR"
+    fi
+
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Registration failed"
+        exit 1
+    fi
+    echo ""
+    echo "Registration complete!"
+    echo ""
+fi
+
+# Download the book
+echo "Downloading from ACSM..."
+TEMP_FILE=$(mktemp -d)/book
+
+"$LIBGOUROU_DIR/acsmdownloader" -D "$ADEPT_DIR" -O "$TEMP_FILE" "$ACSM_FILE"
+
+# Find the downloaded file
+DRM_FILE=$(find "$TEMP_FILE" -type f \( -name "*.epub" -o -name "*.pdf" \) | head -1)
+
+if [[ -z "$DRM_FILE" ]]; then
+    echo "Error: Download failed - no epub/pdf found"
+    exit 1
+fi
+
+# Remove DRM
+BASENAME=$(basename "$DRM_FILE")
+OUTPUT_FILE="$OUTPUT_DIR/$BASENAME"
+
+echo "Removing DRM..."
+"$LIBGOUROU_DIR/adept_remove" -D "$ADEPT_DIR" -o "$OUTPUT_FILE" "$DRM_FILE"
+
+# Cleanup
+rm -rf "$(dirname "$TEMP_FILE")"
+
+echo ""
+echo "Done! Output: $OUTPUT_FILE"

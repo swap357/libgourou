@@ -3,6 +3,34 @@ Introduction
 
 libgourou is a free implementation of Adobe's ADEPT protocol used to add DRM on ePub/PDF files. It overcome the lacks of Adobe support for Linux platforms.
 
+This fork adds **macOS support** and a simple `acsm2epub` wrapper for one-command conversion.
+
+
+macOS Quick Start
+-----------------
+
+### Install dependencies
+
+    brew install curl openssl libzip pugixml
+
+### Build
+
+    ./scripts/setup.sh
+    make BUILD_STATIC=1 BUILD_SHARED=0 BUILD_UTILS=1
+
+### Install the wrapper
+
+    cp acsm2epub ~/.local/bin/
+    chmod +x ~/.local/bin/acsm2epub
+    # Add to PATH if needed:
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+
+### Usage
+
+    acsm2epub book.acsm [output_dir]
+
+First run will prompt for Adobe ID registration (or anonymous auth).
+
 
 Architecture
 ------------
