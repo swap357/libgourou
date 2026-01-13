@@ -1,9 +1,16 @@
+libgourou for macOS
+===================
+
+> **This fork is patched to build and run on macOS.**
+>
+> Includes `acsm2epub` - a one-command wrapper to convert ACSM files to DRM-free EPUB/PDF.
+
+---
+
 Introduction
 ------------
 
-libgourou is a free implementation of Adobe's ADEPT protocol used to add DRM on ePub/PDF files. It overcome the lacks of Adobe support for Linux platforms.
-
-This fork adds **macOS support** and a simple `acsm2epub` wrapper for one-command conversion.
+libgourou is a free implementation of Adobe's ADEPT protocol used to add DRM on ePub/PDF files. It overcomes the lack of Adobe support for Linux platforms.
 
 
 macOS Quick Start
